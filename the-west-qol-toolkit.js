@@ -328,7 +328,14 @@
   // immediate purchase price. After the update it fills in the minimum bid instead, which is easy to click by mistake.
   // We read the two price lines from the window text and point the link back to the immediate purchase price.
   function fixBidLink($) {
-    const num = (txt) => { const m = String(txt).match(/\$\s*([\d.,]+)\s*$/); return m ? m[1] : null; };
+    // The dialog lists the immediate purchase price first and the minimum bid second; the currency sign sits before
+    // or after the number depending on the language ("$ 2.000.000" / "660 $"). The offer line (with the link) is skipped.
+    const num = (txt) => {
+      if (txt.indexOf('$') < 0 || txt.indexOf('(') >= 0) return null;
+      const m = String(txt).match(/\d[\d.,]*/);
+      return m ? m[0] : null;
+    };
+    const digits = (v) => String(v).replace(/[^\d]/g, '');
     const patch = function (box) {
       box = $(box);
       if (box.data('twFixed')) return;
@@ -338,11 +345,11 @@
       const html = box.html().split(/<br\s*\/?>/i).map((l) => $('<div>').html(l).text().trim());
       const prices = html.map(num).filter(Boolean);
       if (prices.length < 2) return; // only one price: the link already holds the immediate purchase price
-      const linkVal = link.text().replace(/[()]/g, '').trim();
-      const immediate = prices[prices.length - 2];
-      if (linkVal !== prices[prices.length - 1] || immediate === linkVal) return;
+      const linkVal = digits(link.text());
+      const immediate = prices[0];
+      if (linkVal !== digits(prices[1]) || digits(immediate) === linkVal) return;
       link.off('click').text('(' + immediate + ')').attr('title', 'Immediate purchase price')
-        .on('click', function () { $('#market_offer_money', box).val(immediate); });
+        .on('click', function () { $('#market_offer_money', box).val(digits(immediate)); });
     };
     new MutationObserver(function (muts) {
       for (const m of muts) {
