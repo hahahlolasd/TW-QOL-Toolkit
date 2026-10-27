@@ -30,8 +30,11 @@ Two buttons under the "sell to anyone" dropdown of the sell dialog (the active o
 - **Money on the market field** – the money waiting for you from sold offers, with a tooltip and a click to refresh.
 
 ### Deals
-- **Customer deals** – a window to track product and item deals per customer: items, amounts, prices, running totals, copy-to-clipboard and save/load to your in-game notes. Search players by name to add them.
-- **Bookkeeper** – tracks who bought your Gold on the market and what each player still owes you, with *settled / reopen* handling for reversed trades.
+**Customer deals** – a window to track product and item deals per customer: items, amounts, prices, running totals, copy-to-clipboard and save/load to your in-game notes. Search players by name to add them.
+
+![Customer deals](screenshots/customers.png)
+
+**Bookkeeper** – tracks who bought your Gold on the market and what each player still owes you, with *settled / reopen* handling for reversed trades.
 
 ![Bookkeeper](screenshots/bookkeeper.png)
 
