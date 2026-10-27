@@ -19,7 +19,9 @@
 - **Sold icons** – sold offers in the *Sell* tab show the dollar icon again.
 
 ### Sell dialog helper buttons
-Two buttons under the "sell to anyone" dropdown of the sell dialog:
+![Sell dialog helper buttons](screenshots/sell-dialog.png)
+
+Two buttons under the "sell to anyone" dropdown of the sell dialog (the active one turns green and gets a checkmark):
 - **Sell for free** – the immediate purchase price becomes the shop price of the whole stack (shop price × quantity) and follows quantity changes.
 - **Sell for market price** – type a price per piece (pre-filled with the market price when known); the immediate purchase price is that price × quantity, the minimum bid is the shop price × quantity. If you edit a field yourself, the script stops overwriting it.
 
@@ -31,8 +33,12 @@ Two buttons under the "sell to anyone" dropdown of the sell dialog:
 - **Customer deals** – a window to track product and item deals per customer: items, amounts, prices, running totals, copy-to-clipboard and save/load to your in-game notes. Search players by name to add them.
 - **Bookkeeper** – tracks who bought your Gold on the market and what each player still owes you, with *settled / reopen* handling for reversed trades.
 
+![Bookkeeper](screenshots/bookkeeper.png)
+
 ### Market price of products
 In the details popup of a product you see its **market price**: your hourly farming rate (default $8000/h, configurable) divided by the number of products you find in an hour-long job. Open any job window once so the script learns your product bonus; the highest value seen per product is cached, so prices are available without opening job windows again. Works together with TW Inventory Reloaded.
+
+![Market price in the product popup](screenshots/market-price.png)
 
 ### Settings & languages
 Open the settings with the gear-puzzle button added to the right-hand menu (or from the Tampermonkey menu). Switch features on and off and set your hourly rate. The script is available in **English** and **Hungarian (Magyar)**. The language follows the game's language automatically; you can override it in the settings. Changes apply after reloading the game.
