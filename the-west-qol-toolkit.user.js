@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         The West QOL Toolkit
 // @namespace    local.thewest.qoltoolkit
-// @version      1.2
+// @version      1.3
 // @homepageURL  https://github.com/hahahlolasd/TW-QOL-Toolkit
 // @updateURL    https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js
 // @downloadURL  https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js
@@ -40,6 +40,9 @@
       { key: 'topbarXp', title: 'XP needed field', text: 'Extra field left of the coin: XP missing for the next level. Click it for today\'s XP, history and an XP target.' },
       { key: 'topbarMarket', title: 'Money on the market field', text: 'Extra field right of the coin: the money waiting for you on the market.' }
     ] },
+    { group: 'Notification bar', items: [
+      { key: 'notiBarAll', title: 'Show all notification buttons', text: 'The bar on the left edge (events, sales, friend requests, ...) shows all its buttons at once instead of hiding some behind the scroll arrows.' }
+    ] },
     { group: 'Deals', items: [
       { key: 'dealsCustomers', title: 'Customer deals', text: 'Track product and item deals per customer.' },
       { key: 'dealsBookkeeper', title: 'Bookkeeper', text: 'Tracks who bought your Gold on the market and what each player owes.' }
@@ -61,6 +64,9 @@
   // ---- language: English (default) or Hungarian; "automatic" follows the language of the game ----
   const HU = {
  "Language": "Nyelv",
+ "Notification bar": "Értesítési sáv",
+ "Show all notification buttons": "Az összes értesítés gomb mutatása",
+ "The bar on the left edge (events, sales, friend requests, ...) shows all its buttons at once instead of hiding some behind the scroll arrows.": "A bal szélén lévő sáv (események, akciók, barátkérések, ...) az összes gombját egyszerre mutatja, nem rejt el néhányat a görgetőnyilak mögé.",
  "Language of the toolkit": "A kiegészítő nyelve",
  "Choose the language of the toolkit. \"Automatic\" follows the language of the game.": "Válaszd ki a kiegészítő nyelvét. Az „Automatikus” a játék nyelvét követi.",
  "Automatic (game language)": "Automatikus (a játék nyelve)",
@@ -2458,10 +2464,41 @@
   }
 
   // ======================================================================================================
+  // MODULE: notification bar (left edge): show every button, no scrolling
+  // ======================================================================================================
+  function moduleNotiBar() {
+    const BIG_VIEW = 99, MIN_CAP = 60;
+    function apply() {
+      const NB = W.WestUi && W.WestUi.NotiBar;
+      const bar = NB && NB.main;
+      if (!bar || typeof bar.setMaxView !== 'function' || !bar.list || !bar.content) return false;
+      if (!bar.__twQolAll) {
+        bar.__twQolAll = true;
+        const view = bar.setMaxView, size = bar.setMaxSize;
+        // whenever the game tries to limit the bar again, keep it unlimited
+        bar.setMaxView = function () { return view.call(this, BIG_VIEW); };
+        bar.setMaxSize = function (n) { return size.call(this, n === -1 ? -1 : Math.max(n || 0, MIN_CAP)); };
+      }
+      bar.setMaxSize(MIN_CAP);
+      bar.setMaxView(BIG_VIEW);
+      if (bar.offset) { bar.offset = 0; bar.update(); }
+      return true;
+    }
+    return function () {
+      if (!cfg.notiBarAll) return;
+      let tries = 0;
+      const t = setInterval(function () {
+        tries++;
+        if (apply() || tries > 240) clearInterval(t);
+      }, 500);
+    };
+  }
+
+  // ======================================================================================================
   // START
   // ======================================================================================================
   function startAll() {
-    [moduleMarketFixer, moduleTopBar, moduleDeals, moduleFairPrice, moduleSellHelper].forEach(function (m) {
+    [moduleMarketFixer, moduleTopBar, moduleDeals, moduleFairPrice, moduleSellHelper, moduleNotiBar].forEach(function (m) {
       try { m(CORE)(); } catch (e) { console.error('[The West QOL Toolkit]', e); }
     });
     // settings button in the game's right-side menu column (where other scripts keep their buttons)

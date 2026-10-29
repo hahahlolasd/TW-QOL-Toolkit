@@ -1,7 +1,7 @@
 # The West QOL Toolkit
 
 [![Install](https://img.shields.io/badge/Install-Tampermonkey%20userscript-brightgreen?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js)
-![Version](https://img.shields.io/badge/version-1.2-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.3-blue?style=for-the-badge)
 ![Languages](https://img.shields.io/badge/languages-English%20%7C%20Magyar-orange?style=for-the-badge)
 
 **Quality-of-life tools for the browser game [The West](https://www.the-west.net/).** One userscript that fixes annoying parts of the market, adds useful fields to the top bar, and helps you keep track of your deals. Every feature can be switched off individually in the settings.
@@ -28,6 +28,9 @@ Two buttons under the "sell to anyone" dropdown of the sell dialog (the active o
 ### Top bar
 - **XP needed field** – shows the XP missing for the next level next to the coin. Click it for the XP gained today, a history of recent days, and an XP target (every day / until a date) with the daily XP you still need.
 - **Money on the market field** – the money waiting for you from sold offers, with a tooltip and a click to refresh.
+
+### Notification bar
+- **Show all notification buttons** – the bar on the left edge (events, sales, friend requests, ...) shows every button at once instead of hiding some behind the scroll arrows. Buttons still disappear when you click them, like in the game.
 
 ### Deals
 **Customer deals** – a window to track product and item deals per customer: items, amounts, prices, running totals, copy-to-clipboard and save/load to your in-game notes. Search players by name to add them.
