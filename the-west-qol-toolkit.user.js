@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         The West QOL Toolkit
 // @namespace    local.thewest.qoltoolkit
-// @version      1.3
+// @version      1.8
 // @homepageURL  https://github.com/hahahlolasd/TW-QOL-Toolkit
 // @updateURL    https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js
 // @downloadURL  https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js
@@ -32,7 +32,12 @@
     { group: 'Market fixes', items: [
       { key: 'fixCategoryClick', title: 'Category list click', text: 'Clicking an item in the buy tabs\' category list shows its offers (no more dragging).' },
       { key: 'fixItemPaging', title: 'Offer page buttons', text: 'The page buttons below the offers of one item really change the page.' },
+      { key: 'fixSearchBox', title: 'Search box', text: 'The name you type into the search box of the market tab is really sent to the server (both search boxes share one name, so the game read the wrong one).' },
       { key: 'fixBidLink', title: 'Buy-now button', text: 'The price button in the auction dialog enters the immediate purchase price again.' },
+      { key: 'confirmWantedSale', title: 'Warn before selling to buyers', text: 'Adds a big "Are you sure you want to sell ...?" warning to the bid window you get when selling an item to a buyer in the market tab where players look for items (the game calls it "Sell offers").' },
+      { key: 'marketTabNames', title: 'Custom market tab names', text: 'Lets you rename the two easily mixed up tabs of the market (for example "For sale" and "Wanted"). The game\'s own names stay unless you type a name below.' },
+      { key: 'marketTabBuyName', type: 'text', perWorld: true, ph: 'e.g. For sale', title: 'Name of the tab with items for sale', text: 'The tab where you buy from other players (the game calls it "Buy offers"). Leave it empty for the default name. Saved for this world only.' },
+      { key: 'marketTabSellName', type: 'text', perWorld: true, ph: 'e.g. Wanted', title: 'Name of the tab with wanted items', text: 'The tab where you sell to other players (the game calls it "Sell offers"). Leave it empty for the default name. Saved for this world only.' },
       { key: 'fixSoldIcons', title: 'Sold icons', text: 'Sold offers in the Sell tab show the dollar icon again.' },
       { key: 'sellHelper', title: 'Sell dialog helper buttons', text: 'Two buttons in the sell dialog: "Sell for free" (shop price of the stack) and "Sell for market price" (enter a price per piece).' }
     ] },
@@ -53,7 +58,7 @@
     ] }
   ];
   const defaults = {};
-  FEATURES.forEach((g) => g.items.forEach((i) => { defaults[i.key] = i.def !== undefined ? i.def : true; }));
+  FEATURES.forEach((g) => g.items.forEach((i) => { if (!i.perWorld) defaults[i.key] = i.def !== undefined ? i.def : true; }));
   const cfg = Object.assign({}, defaults);
   try {
     const raw = hasGM ? GM_getValue(SETTINGS_KEY, null) : localStorage.getItem(SETTINGS_KEY);
@@ -64,6 +69,22 @@
   // ---- language: English (default) or Hungarian; "automatic" follows the language of the game ----
   const HU = {
  "Language": "Nyelv",
+ "Search box": "Keresőmező",
+ "The name you type into the search box of the market tab is really sent to the server (both search boxes share one name, so the game read the wrong one).": "A piaci fülön a keresőmezőbe írt név tényleg elmegy a szervernek (a két keresőmező neve azonos volt, így a játék a rosszat olvasta).",
+ "Warn before selling to buyers": "Figyelmeztetés eladás előtt",
+ "Adds a big \"Are you sure you want to sell ...?\" warning to the bid window you get when selling an item to a buyer in the market tab where players look for items (the game calls it \"Sell offers\").": "Nagy betűs „Biztosan eladod...?” figyelmeztetést tesz a licit ablakba, amikor egy keresett tárgyat adsz el egy vevőnek.",
+ "Confirm sale": "Eladás megerősítése",
+ "Are you sure you want to sell %1 for %2 to %3?": "Biztosan eladod: %1 – %2 áron – %3 játékosnak?",
+ "Name of the tab with items for sale": "Az eladó tárgyak fülének neve",
+ "The tab where you buy from other players (the game calls it \"Buy offers\"). Leave it empty for the default name. Saved for this world only.": "A fül, ahol más játékosoktól vásárolsz. Hagyd üresen az alapértelmezett névhez. Csak ennél a világnál érvényes.",
+ "Name of the tab with wanted items": "A keresett tárgyak fülének neve",
+ "The tab where you sell to other players (the game calls it \"Sell offers\"). Leave it empty for the default name. Saved for this world only.": "A fül, ahol más játékosoknak adsz el. Hagyd üresen az alapértelmezett névhez. Csak ennél a világnál érvényes.",
+ "Custom market tab names": "Egyedi piaci fülnevek",
+ "Lets you rename the two easily mixed up tabs of the market (for example \"For sale\" and \"Wanted\"). The game's own names stay unless you type a name below.": "Átnevezheted a piac két könnyen összekeverhető fülét (pl. „Eladó” és „Keresett”). A játék saját nevei maradnak, amíg nem írsz be nevet lent.",
+ "For sale": "Eladó",
+ "Wanted": "Keresett",
+ "Items other players offer: buy from here.": "Más játékosok kínálata: innen vásárolhatsz.",
+ "Items other players are looking for: sell to them from here.": "Amit más játékosok keresnek: innen adhatsz el nekik.",
  "Notification bar": "Értesítési sáv",
  "Show all notification buttons": "Az összes értesítés gomb mutatása",
  "The bar on the left edge (events, sales, friend requests, ...) shows all its buttons at once instead of hiding some behind the scroll arrows.": "A bal szélén lévő sáv (események, akciók, barátkérések, ...) az összes gombját egyszerre mutatja, nem rejt el néhányat a görgetőnyilak mögé.",
@@ -225,6 +246,25 @@
     return r;
   }
   const pl = (n, one, many) => T(n === 1 ? one : many);
+
+  // ---- settings that belong to one world only (the host name, e.g. hu1.the-west.hu), kept apart from the global settings ----
+  const WORLD_KEY = 'twQol_worldsettings_v1';
+  const worldSettings = (function () {
+    try {
+      const raw = hasGM ? GM_getValue(WORLD_KEY, null) : localStorage.getItem(WORLD_KEY);
+      const o = raw ? JSON.parse(raw) : null;
+      return o && typeof o === 'object' ? o : {};
+    } catch (e) { return {}; }
+  })();
+  const getWorld = (key) => { const w = worldSettings[location.hostname]; return w && typeof w[key] === 'string' ? w[key] : ''; };
+  function setWorld(key, value) {
+    const w = worldSettings[location.hostname] || (worldSettings[location.hostname] = {});
+    const v = String(value).slice(0, 30);
+    if (v.trim()) w[key] = v; else delete w[key];
+    if (!Object.keys(w).length) delete worldSettings[location.hostname];
+    const s = JSON.stringify(worldSettings);
+    try { hasGM ? GM_setValue(WORLD_KEY, s) : localStorage.setItem(WORLD_KEY, s); } catch (e) {}
+  }
 
   function saveCfg() {
     const s = JSON.stringify(cfg);
@@ -391,6 +431,10 @@
           });
           sel.val(cfg[it.key]).on('change', function () { cfg[it.key] = this.value; saveCfg(); markChanged(); });
           txt.append(sel.css('margin-top', '4px'));
+        } else if (it.type === 'text') {
+          const inp = $('<input type="text" class="qs_num" maxlength="30" style="width:170px;text-align:left">').val(getWorld(it.key)).attr('placeholder', T(it.ph));
+          inp.on('input change', function () { setWorld(it.key, this.value); markChanged(); });
+          txt.append(inp.css('margin-top', '4px'));
         } else if (it.type === 'number') {
           const inp = $('<input type="text" class="qs_num">').val(String(cfg[it.key]));
           inp.on('input change', function () {
@@ -568,6 +612,24 @@
     };
   }
 
+  // FIX 4: the search boxes of the market tabs all have the same field name, so the game reads the first one in the page
+  // (usually the box of another tab) and the search ignores what you typed. We put the text of the visible box into the request.
+  function fixSearchBox(A, $) {
+    if (!A || typeof A.remoteCall !== 'function' || A.remoteCall.__twQolSearch) return;
+    const orig = A.remoteCall;
+    A.remoteCall = function (action, method, params) {
+      try {
+        if (action === 'building_market' && method === 'search' && params && !params.item_id && !params.type && params.nav) {
+          const vis = $('.marketplace input[name="market_search_search"]').filter(function () { return this.offsetParent !== null; }).first();
+          const txt = String(vis.val() || '').trim();
+          if (vis.length && txt !== String(params.pattern || '')) params.pattern = txt;
+        }
+      } catch (e) {}
+      return orig.apply(this, arguments);
+    };
+    A.remoteCall.__twQolSearch = true;
+  }
+
   function start() {
     let tries = 0;
     const timer = setInterval(function () {
@@ -576,6 +638,7 @@
         clearInterval(timer);
         if (cfg.fixCategoryClick) fixAccordionClick(W.jQuery);
         if (cfg.fixItemPaging) fixItemPagebar(W.jQuery);
+        if (cfg.fixSearchBox) fixSearchBox(W.Ajax, W.jQuery);
         if (cfg.fixBidLink) fixBidLink(W.jQuery);
         if (cfg.fixSoldIcons) fixSellIcons(W.jQuery);
       } else if (tries > 240) {
@@ -2495,10 +2558,87 @@
   }
 
   // ======================================================================================================
+  // MODULE: clearer names for the two market tabs people mix up
+  // ======================================================================================================
+  function moduleMarketTabs() {
+    // tab ids: 'buy' = "Buy offers" (items others offer: you buy), 'buy-offers' = "Sell offers" (requests of buyers: you sell). Only the names the player typed are applied.
+    const TABS = [['_tab_id_buy', 'marketTabBuyName'], ['_tab_id_buy-offers', 'marketTabSellName']];
+    function apply() {
+      TABS.forEach(function (t) {
+        const tab = document.querySelector('.marketplace .tw2gui_window_tab.' + t[0]);
+        if (!tab) return;
+        const txt = tab.querySelector('.tw2gui_window_tab_text') || tab;
+        if (txt.__twQolOrig === undefined) txt.__twQolOrig = txt.textContent;
+        const custom = getWorld(t[1]).trim();
+        const want = custom || txt.__twQolOrig;
+        if (txt.textContent !== want) txt.textContent = want;
+      });
+    }
+    return function () {
+      if (!cfg.marketTabNames) return;
+      let queued = false;
+      const run = function () { queued = false; try { apply(); } catch (e) {} };
+      new MutationObserver(function () {
+        if (!queued && document.querySelector('.marketplace')) { queued = true; requestAnimationFrame(run); }
+      }).observe(document.body || document.documentElement, { childList: true, subtree: true, characterData: true });
+    };
+  }
+
+  // ======================================================================================================
+  // MODULE: ask before selling to a buyer (the market tab where players look for items)
+  // ======================================================================================================
+  function moduleConfirmSale() {
+    let pending = null;   // the row whose icon the player clicked in a market list
+    function details(el) {
+      const row = el.closest('.row');
+      if (!row) return null;
+      // the columns are called mpb_* in most market lists and wih_* in "Ending soon"
+      const txt = (sel) => { const e = row.querySelector(sel); return e ? e.textContent.trim() : ''; };
+      const amount = parseInt(txt('[class*="_stack"]'), 10) || 1;
+      return { item: (amount > 1 ? amount + ' x ' : '') + txt('[class*="_article"]'), buyer: txt('[class*="_vendor"] .linkstyle') || txt('[class*="_vendor"]') };
+    }
+    // puts a big warning into the game's own "Sell item at auction" dialog
+    function decorate(dlg) {
+      const box = dlg.querySelector('.marketBid_messageBox');
+      const money = box && box.querySelector('#market_offer_money');
+      if (!money || dlg.__twQolWarned || !pending || Date.now() - pending.t > 15000) return;
+      // the sell dialog has only Bid + Cancel; the purchase dialog also offers Cash / Bank account
+      if (dlg.querySelectorAll('.tw2gui_dialog_actions .tw2gui_button').length !== 2) return;
+      dlg.__twQolWarned = true;
+      const d = pending;
+      pending = null;
+      const warn = document.createElement('div');
+      warn.style.cssText = 'font:bold 17px/1.3 Arial,sans-serif;color:#a00;text-align:center;margin:4px 0 10px;padding:6px 8px;border:2px solid #a00;background:rgba(170,0,0,.08);';
+      const upd = function () { warn.textContent = T('Are you sure you want to sell %1 for %2 to %3?', d.item, '$' + String(money.value || '').replace(/^\s*\$\s*/, ''), d.buyer); };
+      upd();
+      money.addEventListener('input', upd);
+      money.addEventListener('keyup', upd);
+      dlg.addEventListener('click', function () { setTimeout(upd, 0); });   // the "(price)" link fills the field
+      box.insertBefore(warn, box.firstChild);
+    }
+    return function () {
+      if (!cfg.confirmWantedSale) return;
+      // remember the row of any click on the icon cell of a market list (the dialog opens right after the icon is clicked)
+      const remember = function (ev) {
+        const t = ev.target;
+        if (!t || !t.closest || !t.closest('.marketplace [class*="_pickup"]')) return;
+        pending = details(t); if (pending) pending.t = Date.now();
+      };
+      document.addEventListener('mousedown', remember, true);
+      document.addEventListener('click', remember, true);
+      new MutationObserver(function () {
+        if (!pending) return;
+        document.querySelectorAll('.tw2gui_dialog').forEach(decorate);
+      }).observe(document.body, { childList: true, subtree: true });
+      setInterval(function () { if (pending) document.querySelectorAll('.tw2gui_dialog').forEach(decorate); }, 400);
+    };
+  }
+
+  // ======================================================================================================
   // START
   // ======================================================================================================
   function startAll() {
-    [moduleMarketFixer, moduleTopBar, moduleDeals, moduleFairPrice, moduleSellHelper, moduleNotiBar].forEach(function (m) {
+    [moduleMarketFixer, moduleTopBar, moduleDeals, moduleFairPrice, moduleSellHelper, moduleNotiBar, moduleMarketTabs, moduleConfirmSale].forEach(function (m) {
       try { m(CORE)(); } catch (e) { console.error('[The West QOL Toolkit]', e); }
     });
     // settings button in the game's right-side menu column (where other scripts keep their buttons)

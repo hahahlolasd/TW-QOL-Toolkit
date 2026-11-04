@@ -1,7 +1,7 @@
 # The West QOL Toolkit
 
 [![Install](https://img.shields.io/badge/Install-Tampermonkey%20userscript-brightgreen?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js)
-![Version](https://img.shields.io/badge/version-1.3-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.8-blue?style=for-the-badge)
 ![Languages](https://img.shields.io/badge/languages-English%20%7C%20Magyar-orange?style=for-the-badge)
 
 **Quality-of-life tools for the browser game [The West](https://www.the-west.net/).** One userscript that fixes annoying parts of the market, adds useful fields to the top bar, and helps you keep track of your deals. Every feature can be switched off individually in the settings.
@@ -13,9 +13,16 @@
 ## What you get
 
 ### Market fixes
+- **Search box** – searching by name in the *Sell offers* tab works again (the game read the search box of another tab and showed random items).
 - **Category list click** – clicking an item in the buy tabs' category list shows its offers right away (no more dragging).
 - **Offer page buttons** – the page buttons below the offers of one item really change the page.
 - **Buy-now button** – the price button in the auction dialog enters the *immediate purchase price* again, instead of suggesting the minimum bid.
+- **Custom market tab names** – the two easily mixed up tabs (*Buy offers* = items you can buy, *Sell offers* = requests of other players you can sell to) keep the game's own names until you type your own in the settings, for example **For sale** and **Wanted**. Names are saved separately for every world.
+
+  ![Custom market tab names](screenshots/market-tabs.png)
+- **Sell warning** – when you open the bid window to sell an item to a buyer, it gets a big red "Are you sure you want to sell 1000 x Grain for $100,000 to <player>?" line, so a misclick cannot sell your stock. The price follows the bid field.
+
+  ![Sell warning](screenshots/sell-warning.png)
 - **Sold icons** – sold offers in the *Sell* tab show the dollar icon again.
 
 ### Sell dialog helper buttons
