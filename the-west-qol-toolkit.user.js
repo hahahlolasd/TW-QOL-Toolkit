@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         The West QOL Toolkit
 // @namespace    local.thewest.qoltoolkit
-// @version      1.8
+// @version      1.10
 // @homepageURL  https://github.com/hahahlolasd/TW-QOL-Toolkit
 // @updateURL    https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js
 // @downloadURL  https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js
@@ -39,7 +39,7 @@
       { key: 'marketTabBuyName', type: 'text', perWorld: true, ph: 'e.g. For sale', title: 'Name of the tab with items for sale', text: 'The tab where you buy from other players (the game calls it "Buy offers"). Leave it empty for the default name. Saved for this world only.' },
       { key: 'marketTabSellName', type: 'text', perWorld: true, ph: 'e.g. Wanted', title: 'Name of the tab with wanted items', text: 'The tab where you sell to other players (the game calls it "Sell offers"). Leave it empty for the default name. Saved for this world only.' },
       { key: 'fixSoldIcons', title: 'Sold icons', text: 'Sold offers in the Sell tab show the dollar icon again.' },
-      { key: 'sellHelper', title: 'Sell dialog helper buttons', text: 'Two buttons in the sell dialog: "Sell for free" (shop price of the stack) and "Sell for market price" (enter a price per piece).' }
+      { key: 'sellHelper', title: 'Sell dialog helper buttons', text: 'Two buttons in the sell and "want to buy" dialogs: "Sell/Buy for free" (shop price of the stack) and "Sell/Buy for market price" (enter a price per piece), and a price per piece field you can type into (it follows the total price and the other way round).' }
     ] },
     { group: 'Top bar', items: [
       { key: 'topbarXp', title: 'XP needed field', text: 'Extra field left of the coin: XP missing for the next level. Click it for today\'s XP, history and an XP target.' },
@@ -55,15 +55,21 @@
     { group: 'Prices', items: [
       { key: 'fairPrice', title: 'Market price of products', text: 'Shows the market price of a product in its details popup: your hourly rate divided by the products you find in an hour-long job. Open any job window once so the toolkit can learn your product bonus.' },
       { key: 'fairHourlyRate', type: 'number', def: 8000, title: 'Hourly farming rate', text: 'Dollars per hour used for the market price of products.' }
+    ] },
+    { group: 'Duels', items: [
+      { key: 'duelCashWarn', title: 'Cash warning before a duel', text: 'Asks for confirmation before a duel is added to your job queue while you carry cash.' },
+      { key: 'duelCashLimit', type: 'number', min: 0, def: 0, title: 'Cash limit for the warning', text: 'No warning while the cash in your hands is at most this amount. 0 warns whenever you carry any cash.' }
     ] }
   ];
   const defaults = {};
+  const MIN0 = {};   // number settings that may be 0
+  FEATURES.forEach((g) => g.items.forEach((i) => { if (i.min === 0) MIN0[i.key] = true; }));
   FEATURES.forEach((g) => g.items.forEach((i) => { if (!i.perWorld) defaults[i.key] = i.def !== undefined ? i.def : true; }));
   const cfg = Object.assign({}, defaults);
   try {
     const raw = hasGM ? GM_getValue(SETTINGS_KEY, null) : localStorage.getItem(SETTINGS_KEY);
     const saved = raw ? JSON.parse(raw) : null;
-    if (saved) Object.keys(defaults).forEach((k) => { if (typeof saved[k] === typeof defaults[k] && (typeof saved[k] !== 'number' || (isFinite(saved[k]) && saved[k] > 0)) && (k !== 'language' || ['auto', 'en', 'hu'].indexOf(saved[k]) >= 0)) cfg[k] = saved[k]; });
+    if (saved) Object.keys(defaults).forEach((k) => { if (typeof saved[k] === typeof defaults[k] && (typeof saved[k] !== 'number' || (isFinite(saved[k]) && (saved[k] > 0 || (saved[k] === 0 && MIN0[k])))) && (k !== 'language' || ['auto', 'en', 'hu'].indexOf(saved[k]) >= 0)) cfg[k] = saved[k]; });
   } catch (e) {}
 
   // ---- language: English (default) or Hungarian; "automatic" follows the language of the game ----
@@ -101,7 +107,7 @@
  "Sold icons": "Eladott ajánlatok ikonja",
  "Sold offers in the Sell tab show the dollar icon again.": "Az Eladnék fülön az eladott ajánlatok újra dollár ikont kapnak.",
  "Sell dialog helper buttons": "Eladási ablak segédgombjai",
- "Two buttons in the sell dialog: \"Sell for free\" (shop price of the stack) and \"Sell for market price\" (enter a price per piece).": "Két gomb az eladási ablakban: „Ingyen eladás” (a készlet boltári ára) és „Eladás piaci áron” (darabár megadása).",
+ "Two buttons in the sell and \"want to buy\" dialogs: \"Sell/Buy for free\" (shop price of the stack) and \"Sell/Buy for market price\" (enter a price per piece), and a price per piece field you can type into (it follows the total price and the other way round).": "Két gomb az eladási és a „Vásárolnék” ablakban: „Ingyen eladás/vétel” (a készlet boltári ára) és „Eladás/vétel piaci áron” (darabár megadása), valamint egy darabár mező, amibe írhatsz (követi az összárat és fordítva).",
  "Top bar": "Felső sáv",
  "XP needed field": "Hiányzó XP mező",
  "Extra field left of the coin: XP missing for the next level. Click it for today's XP, history and an XP target.": "Extra mező az érme bal oldalán: a következő szinthez hiányzó XP. Kattints rá a mai XP-hez, az előzményekhez és az XP-célhoz.",
@@ -113,6 +119,18 @@
  "Bookkeeper": "Könyvelő",
  "Tracks who bought your Gold on the market and what each player owes.": "Követi, ki vette meg az Aranyadat a piacon, és ki mennyivel tartozik.",
  "Prices": "Árak",
+ "Duels": "Párbajok",
+ "Cash warning before a duel": "Készpénz-figyelmeztetés párbaj előtt",
+ "Asks for confirmation before a duel is added to your job queue while you carry cash.": "Megerősítést kér, mielőtt egy párbaj felkerül a munkasorodra, miközben készpénz van nálad.",
+ "Cash limit for the warning": "A figyelmeztetés készpénz-határa",
+ "No warning while the cash in your hands is at most this amount. 0 warns whenever you carry any cash.": "Nincs figyelmeztetés, amíg a nálad lévő készpénz legfeljebb ennyi. A 0 minden esetben figyelmeztet, ha van nálad készpénz.",
+ "Cash in hand": "Készpénz nálad",
+ "You are carrying %1 in cash!": "Nálad van %1 készpénz!",
+ "If you lose this duel, you can lose part of it. Deposit it in the bank first, or duel anyway.": "Ha elveszíted ezt a párbajt, elvesztheted egy részét. Előbb tedd be a bankba, vagy párbajozz mégis.",
+ "Do not warn me again this session": "Ebben a munkamenetben ne figyelmeztess többször",
+ "This warning can be turned off in the QOL Toolkit settings.": "Ezt a figyelmeztetést kikapcsolhatod a QOL Toolkit beállításaiban.",
+ "Duel anyway": "Párbaj mégis",
+ "Cancel duel": "Párbaj mégsem",
  "Market price of products": "Termékek piaci ára",
  "Shows the market price of a product in its details popup: your hourly rate divided by the products you find in an hour-long job. Open any job window once so the toolkit can learn your product bonus.": "Megmutatja a termék piaci árát a részletek felugró ablakban: az óránkénti bevételed osztva az egyórás munkán talált termékek számával. Nyiss meg egyszer egy munka ablakot, hogy a kiegészítő megtanulja a termékbónuszodat.",
  "Hourly farming rate": "Óránkénti gyűjtési bevétel",
@@ -230,6 +248,10 @@
  "Sell for free": "Ingyen eladás",
  "The immediate purchase price becomes the shop price of the whole stack (shop price x quantity).": "Az azonnali vételár a teljes készlet boltári ára lesz (boltári ár x mennyiség).",
  "Sell for market price": "Eladás piaci áron",
+ "Buy for free": "Ingyen vétel",
+ "Buy for market price": "Vétel piaci áron",
+ "The immediate purchase price becomes the shop price of the whole stack (shop price x quantity): the lowest price possible.": "Az azonnali vételár a teljes készlet boltári ára lesz (boltári ár x mennyiség): a lehető legalacsonyabb ár.",
+ "Enter a price per piece: the immediate purchase price is that price x quantity.": "Add meg a darabárat: az azonnali vételár ez az ár x mennyiség.",
  "Enter a price per piece: the immediate purchase price is that price x quantity, the minimum bid is the shop price x quantity.": "Add meg a darabárat: az azonnali vételár ez az ár x mennyiség, a legkisebb licit a boltári ár x mennyiség."
 };
   const lang = function () {
@@ -439,7 +461,7 @@
           const inp = $('<input type="text" class="qs_num">').val(String(cfg[it.key]));
           inp.on('input change', function () {
             const v = parseFloat(String(this.value).replace(/[^0-9.]/g, ''));
-            if (isFinite(v) && v > 0) { cfg[it.key] = v; saveCfg(); }
+            if (isFinite(v) && (v > 0 || (v === 0 && it.min === 0))) { cfg[it.key] = v; saveCfg(); }
           });
           txt.append(inp.css('margin-top', '4px'));
         } else {
@@ -2395,54 +2417,104 @@
       return true;
     }
 
+    // which item a dialog is about: the sell dialog asks the server for other offers of it (hooked above); the "want to buy"
+    // dialog asks nothing, so the item is found from its picture (and name) instead
+    function resolveItem(w) {
+      try {
+        const slot = w.find('#auction_item_slot img.tw_item, #auction_item_slot img').first();
+        const src = slot.length ? slot.attr('src') : '';
+        const all = src && W.ItemManager.getAll ? Object.values(W.ItemManager.getAll()) : [];
+        const cand = all.filter(function (i) { return i && i.image === src; });
+        if (cand.length === 1) return cand[0].item_id;
+        if (cand.length > 1) {
+          if (itemId && cand.some(function (i) { return i.item_id === itemId; })) return itemId;
+          const pop = w.find('#auction_item_slot .item')[0];
+          const txt = pop && pop._mpopup && typeof pop._mpopup.text === 'string' ? pop._mpopup.text : '';
+          const named = txt ? cand.filter(function (i) { return i.name && txt.indexOf(i.name) >= 0; }) : [];
+          return (named[0] || cand[0]).item_id;
+        }
+      } catch (e) {}
+      return itemId;
+    }
+
     function build(win) {
       const $ = W.jQuery;
       const w = $(win);
       if (w.data('twQolSell')) return;
-      const qty = w.find('#market_sell_itemStack');
+      const qty = w.find('#market_sell_itemStack');   // missing when you offer a single item
       const max = w.find('#market_max_price');
       const min = w.find('#market_min_bid');
-      if (!qty.length || !max.length || !min.length) return;
+      if (!max.length || !min.length) return;
+      // the buttons of the dialog (they tell the sell and the "want to buy" dialog apart) may not be in yet: look again in a moment
+      if (!w.find('.tw2gui_dialog_actions .tw2gui_button').length && !win.__twTry) { win.__twTry = true; setTimeout(function () { build(win); }, 150); return; }
       w.data('twQolSell', true);
 
+      // the "want to buy" dialog is the same window with Cash / Bank account / Cancel buttons
+      const isBuy = w.find('.tw2gui_dialog_actions .tw2gui_button').length >= 3;
+      const L = isBuy
+        ? { free: 'Buy for free', market: 'Buy for market price',
+            freeTip: 'The immediate purchase price becomes the shop price of the whole stack (shop price x quantity): the lowest price possible.',
+            marketTip: 'Enter a price per piece: the immediate purchase price is that price x quantity.' }
+        : { free: 'Sell for free', market: 'Sell for market price',
+            freeTip: 'The immediate purchase price becomes the shop price of the whole stack (shop price x quantity).',
+            marketTip: 'Enter a price per piece: the immediate purchase price is that price x quantity, the minimum bid is the shop price x quantity.' };
+
       let mode = null;          // null | 'free' | 'market'
+      let driver = null;        // which of the two prices you set last: 'piece' | 'max' (the other one follows)
       let minAuto = true;       // the minimum bid is filled in by us until you change it yourself
       let setting = false;      // true while we write into the inputs (so our own writes are not taken for yours)
+      let item = null;
+      const curItem = function () { if (item === null) item = resolveItem(w); return item; };
       const shopPrice = function () {
-        try { const it = W.ItemManager.get(itemId); return it && it.sell_price ? it.sell_price : 0; } catch (e) { return 0; }
+        try { const it = W.ItemManager.get(curItem()); return it && it.sell_price ? it.sell_price : 0; } catch (e) { return 0; }
       };
       const num = function (el) { const v = parseInt(String(el.val()).replace(/[^\d]/g, ''), 10); return v > 0 ? v : 0; };
+      const getQty = function () { return qty.length ? num(qty) : 1; };
       const fill = function (input, value) {
         setting = true;
         try { input.val(String(value)).trigger('input').trigger('keyup').trigger('change'); } finally { setting = false; }
       };
 
-      // ---- the extra "price per piece" field (only visible in the market price mode) ----
-      let piece;
-      try {
-        const tf = new W.west.gui.Textfield('twqol_piece_price');
-        tf.setWidth(Math.max(60, Math.round(max.closest('.tw2gui_textfield').outerWidth() || 90) - 8));
-        piece = $(tf.getMainDiv()).find('input');
-        if (!piece.length) throw new Error('no input');
-        piece.data('twHolder', $(tf.getMainDiv()));
-      } catch (e) {
-        piece = $('<input type="text" id="twqol_piece_price" style="width:' + Math.max(60, Math.round(max.outerWidth() || 90)) + 'px">');
-        piece.data('twHolder', piece);
+      // ---- price per piece: a real input in the place of the game's "unit price" label ----
+      let piece = $();
+      const unitCell = w.find('#mps_market_unitprice');
+      if (qty.length && unitCell.length) {
+        let holder;
+        try {
+          const tf = new W.west.gui.Textfield('twqol_piece_price');
+          tf.setWidth(Math.max(60, Math.round(max.closest('.tw2gui_textfield').outerWidth() || 90) - 8));
+          holder = $(tf.getMainDiv());
+          piece = holder.find('input');
+          if (!piece.length) throw new Error('no input');
+        } catch (e) {
+          piece = $('<input type="text" id="twqol_piece_price" style="width:' + Math.max(60, Math.round(max.outerWidth() || 90)) + 'px">');
+          holder = piece;
+        }
+        // the game writes the unit price into this cell as text; let it keep doing that in a hidden spot
+        unitCell.removeAttr('id').empty().append($('<span id="mps_market_unitprice" style="display:none"></span>'))
+          .append($('<span style="white-space:nowrap">$ </span>')).append(holder);
+        holder.css('display', 'inline-block').css('vertical-align', 'middle');
       }
-      // two cells that line up with the "Azonnali vételár" label and input above them
-      const pieceLabel = $('<label for="twqol_piece_price"></label>').text(T('Price per piece:')).add($('<span> $</span>'));
-      const pieceBox = piece.data('twHolder').css('display', 'inline-block').css('vertical-align', 'middle').css('white-space', 'nowrap');
-      const pieceRow = $().add(pieceLabel).add(pieceBox);
+      const showPiece = function (v) {
+        if (!piece.length) return;
+        piece.val(v > 0 ? String(Math.round(v * 100) / 100) : '');
+      };
+      const pieceValue = function () { const v = parseFloat(String(piece.val()).replace(',', '.').replace(/[^\d.]/g, '')); return v > 0 ? v : 0; };
 
-      const update = function () {
+      // keeps the two prices in step: price x quantity = immediate purchase price, in both directions
+      const sync = function () {
+        const q = getQty();
         if (mode === 'free') {
-          const q = num(qty), u = shopPrice();
-          if (q && u) fill(max, u * q);
-        } else if (mode === 'market') {
-          const q = num(qty), p = num(piece), u = shopPrice();
-          if (q && p) fill(max, p * q);
+          const u = shopPrice();
+          if (q && u) { fill(max, u * q); showPiece(u); }
+        } else if (driver === 'piece' || mode === 'market') {
+          const p = pieceValue(), u = shopPrice();
+          if (q && p) fill(max, Math.round(p * q));
           else if (q && !p) fill(max, '');
-          if (minAuto && q && u) fill(min, u * q);
+          if (mode === 'market' && !isBuy && minAuto && q && u) fill(min, u * q);
+        } else if (driver === 'max') {
+          const m = num(max);
+          showPiece(q && m ? m / q : 0);
         }
       };
 
@@ -2453,57 +2525,49 @@
           color: '#f1dfb5', background: 'linear-gradient(#755331,#3f2916)', border: '1px solid #2a1a0c', 'border-radius': '3px',
           'line-height': '14px', 'user-select': 'none' });
       };
-      const bFree = mk(T('Sell for free'), T('The immediate purchase price becomes the shop price of the whole stack (shop price x quantity).'));
-      const bMarket = mk(T('Sell for market price'), T('Enter a price per piece: the immediate purchase price is that price x quantity, the minimum bid is the shop price x quantity.'));
+      const bFree = mk(T(L.free), T(L.freeTip));
+      const bMarket = mk(T(L.market), T(L.marketTip));
       const look = function (btn, label, on) {
         btn.text((on ? '\u2713 ' : '') + label).css(on
           ? { background: 'linear-gradient(#5fae2e,#2f6d1d)', color: '#fff', 'border-color': '#1d4a10', 'box-shadow': '0 0 0 2px #9be25f' }
           : { background: 'linear-gradient(#755331,#3f2916)', color: '#f1dfb5', 'border-color': '#2a1a0c', 'box-shadow': 'none' });
       };
       const paint = function () {
-        look(bFree, T('Sell for free'), mode === 'free');
-        look(bMarket, T('Sell for market price'), mode === 'market');
-        // hidden, not removed: the dialog keeps its size, so nothing jumps when the mode is switched
-        pieceLabel.css('visibility', mode === 'market' ? 'visible' : 'hidden');
-        pieceBox.css('visibility', mode === 'market' ? 'visible' : 'hidden');
+        look(bFree, T(L.free), mode === 'free');
+        look(bMarket, T(L.market), mode === 'market');
       };
       const setMode = function (m) {
         mode = mode === m ? null : m;
+        if (mode) driver = 'piece';
         paint();
-        update();
         if (mode === 'market') {
           // start from the market price when it is known (learned from the job windows you opened)
-          if (!num(piece) && CORE.marketPrice) { const p = CORE.marketPrice(itemId); if (p) { piece.val(String(p)); update(); } }
+          if (!pieceValue() && CORE.marketPrice) { const p = CORE.marketPrice(curItem()); if (p) showPiece(p); }
           piece.focus();
         }
+        sync();
       };
       bFree.on('click', function (ev) { ev.preventDefault(); setMode('free'); });
       bMarket.on('click', function (ev) { ev.preventDefault(); setMode('market'); });
 
-      // typing in the fields yourself: the price field leaves the mode, the minimum bid is never filled in again
-      max.on('input keyup change', function () { if (!setting && mode) { mode = null; paint(); } });
+      // typing in the fields yourself: the price field leaves the mode and the price per piece follows it; the minimum bid is never filled in again
+      max.on('input keyup change', function () {
+        if (setting) return;
+        if (mode) { mode = null; paint(); }
+        driver = 'max';
+        sync();
+      });
       min.on('input keyup change', function () { if (!setting) minAuto = false; });
-      qty.on('input keyup change', update);
-      piece.on('input keyup change', function () { if (mode === 'market') update(); });
+      qty.on('input keyup change', sync);
+      piece.on('input keyup', function () {
+        if (mode === 'free') { mode = null; paint(); }
+        driver = 'piece';
+        sync();
+      });
 
-      // ---- placement: the buttons under the whole price table (below the recipient dropdown); the piece price in the spacer row below the prices ----
+      // ---- placement: the buttons under the whole price table (below the recipient dropdown) ----
       const bar = $('<div class="twqol_bar" style="text-align:center;margin:8px 0 2px;"></div>').append(bFree).append(bMarket);
-      const priceTable = max.closest('table');
-      priceTable.after(bar);   // under the "sell to anyone" dropdown
-      const tr = max.closest('tr');
-      const next = tr.next('tr');
-      pieceLabel.css('visibility', 'hidden');
-      pieceBox.css('visibility', 'hidden');
-      if (next.length && next.children('td').length === 1) {
-        // split the one-cell spacer row into four cells like the row above, and use the last two
-        const cells = tr.children('td');
-        next.empty();
-        for (let i = 0; i < 4; i++) next.append($('<td></td>').attr('style', (cells.eq(i).attr('style') || '')).css('white-space', 'nowrap'));
-        next.children('td').eq(2).append(pieceLabel);
-        next.children('td').eq(3).append(pieceBox);
-      } else {
-        priceTable.after($('<div style="text-align:center;margin:2px 0;"></div>').append(pieceLabel).append(pieceBox));
-      }
+      max.closest('table').after(bar);
     }
 
     function start() {
@@ -2635,10 +2699,80 @@
   }
 
   // ======================================================================================================
+  // MODULE: warn before a duel is queued while carrying cash
+  // ======================================================================================================
+  function moduleDuelWarn() {
+    const SKIP_KEY = 'twQol_duelWarnOff';
+    let skip = false;
+    try { skip = window.sessionStorage.getItem(SKIP_KEY) === '1'; } catch (e) {}
+    const approved = new WeakSet();   // tasks the player has confirmed (the game may call add() again for them)
+    const cash = function () { const m = W.Character && W.Character.money; return typeof m === 'number' && isFinite(m) ? m : 0; };
+    const money = function (n) {
+      return '$' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, lang() === 'hu' ? '.' : ',');
+    };
+
+    function warn(amount, onGo) {
+      const $ = W.jQuery;
+      const body = $('<div style="text-align:left;min-width:340px;"></div>');
+      const row = $('<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"></div>');
+      row.append($('<div style="flex:0 0 46px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a4d,#c01808 70%);border:2px solid #5a0c04;box-shadow:0 1px 3px rgba(0,0,0,.5);color:#fff;font:bold 34px/46px Arial,sans-serif;text-align:center;text-shadow:0 1px 2px #5a0c04;">!</div>'));
+      row.append($('<div style="font-size:13px;line-height:1.35;"></div>')
+        .append($('<b style="color:#b01208;font-size:15px;"></b>').text(T('You are carrying %1 in cash!', money(amount))))
+        .append('<br>').append(document.createTextNode(T('If you lose this duel, you can lose part of it. Deposit it in the bank first, or duel anyway.'))));
+      body.append(row);
+      let cb = null;
+      try {
+        cb = new W.west.gui.Checkbox();
+        cb.setLabel(T('Do not warn me again this session'));
+        body.append($('<div style="margin:6px 0 4px;"></div>').append(cb.getMainDiv()));
+      } catch (e) { cb = null; }
+      body.append($('<div style="font-size:11px;color:#6a5030;margin-top:4px;"></div>').text(T('This warning can be turned off in the QOL Toolkit settings.')));
+      const remember = function () {
+        if (cb && cb.isSelected && cb.isSelected()) {
+          skip = true;
+          try { window.sessionStorage.setItem(SKIP_KEY, '1'); } catch (e) {}
+        }
+      };
+      new W.west.gui.Dialog(T('Cash in hand'), body)
+        .addButton(T('Duel anyway'), function () { remember(); onGo(); })
+        .addButton(T('Cancel duel'), function () { remember(); })
+        .show();
+    }
+
+    function hook() {
+      const Q = W.TaskQueue;
+      if (!Q || typeof Q.add !== 'function') return false;
+      if (Q.add.__twQolDuel) return true;
+      const orig = Q.add;
+      Q.add = function (tasks) {
+        try {
+          const list = Array.isArray(tasks) ? tasks : [tasks];
+          const duels = list.filter(function (t) { return t && t.type === 'duel' && !approved.has(t); });
+          const have = cash();
+          if (cfg.duelCashWarn && !skip && duels.length && have > (Number(cfg.duelCashLimit) || 0)) {
+            const self = this;
+            warn(have, function () { list.forEach(function (t) { if (t && typeof t === 'object') approved.add(t); }); orig.call(self, tasks); });
+            return;
+          }
+        } catch (e) { console.error('[The West QOL Toolkit] duel warning', e); }
+        return orig.apply(this, arguments);
+      };
+      Q.add.__twQolDuel = true;
+      return true;
+    }
+
+    return function () {
+      if (!cfg.duelCashWarn) return;
+      let tries = 0;
+      const t = setInterval(function () { tries++; if (hook() || tries > 240) clearInterval(t); }, 500);
+    };
+  }
+
+  // ======================================================================================================
   // START
   // ======================================================================================================
   function startAll() {
-    [moduleMarketFixer, moduleTopBar, moduleDeals, moduleFairPrice, moduleSellHelper, moduleNotiBar, moduleMarketTabs, moduleConfirmSale].forEach(function (m) {
+    [moduleMarketFixer, moduleTopBar, moduleDeals, moduleFairPrice, moduleSellHelper, moduleNotiBar, moduleMarketTabs, moduleConfirmSale, moduleDuelWarn].forEach(function (m) {
       try { m(CORE)(); } catch (e) { console.error('[The West QOL Toolkit]', e); }
     });
     // settings button in the game's right-side menu column (where other scripts keep their buttons)

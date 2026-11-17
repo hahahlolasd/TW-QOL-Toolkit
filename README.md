@@ -1,7 +1,7 @@
 # The West QOL Toolkit
 
 [![Install](https://img.shields.io/badge/Install-Tampermonkey%20userscript-brightgreen?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://raw.githubusercontent.com/hahahlolasd/TW-QOL-Toolkit/main/the-west-qol-toolkit.user.js)
-![Version](https://img.shields.io/badge/version-1.8-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.10-blue?style=for-the-badge)
 ![Languages](https://img.shields.io/badge/languages-English%20%7C%20Magyar-orange?style=for-the-badge)
 
 **Quality-of-life tools for the browser game [The West](https://www.the-west.net/).** One userscript that fixes annoying parts of the market, adds useful fields to the top bar, and helps you keep track of your deals. Every feature can be switched off individually in the settings.
@@ -25,12 +25,30 @@
   ![Sell warning](screenshots/sell-warning.png)
 - **Sold icons** – sold offers in the *Sell* tab show the dollar icon again.
 
-### Sell dialog helper buttons
+### Sell and "Want to buy" dialog helpers
 ![Sell dialog helper buttons](screenshots/sell-dialog.png)
 
-Two buttons under the "sell to anyone" dropdown of the sell dialog (the active one turns green and gets a checkmark):
+Two buttons under the "sell to anyone" dropdown of the sell dialog (the active one turns green and gets a checkmark). They work for every item, also when you offer just one piece:
 - **Sell for free** – the immediate purchase price becomes the shop price of the whole stack (shop price × quantity) and follows quantity changes.
-- **Sell for market price** – type a price per piece (pre-filled with the market price when known); the immediate purchase price is that price × quantity, the minimum bid is the shop price × quantity. If you edit a field yourself, the script stops overwriting it.
+- **Sell for market price** – type a price per piece (pre-filled with the market price when known); the immediate purchase price is that price × quantity, the minimum bid is the shop price × quantity.
+
+The same two buttons appear in the **Want to buy** dialog as **Buy for free** (the lowest possible price: shop price × quantity) and **Buy for market price**.
+
+The game's read-only *unit price* label is now a real **price per piece** input: type a price per piece and the immediate purchase price (price × quantity) is filled in as you type; type the price of the whole batch and the price per piece is calculated for you. If you change the quantity, the price you typed last is kept and the other one follows. If you edit a field yourself, the script stops overwriting it.
+
+The same works in the "Want to buy" dialog, with **Buy for free** and **Buy for market price**:
+
+![Want to buy dialog helper](screenshots/buy-dialog.png)
+
+### Duels
+
+![Duel cash warning](screenshots/duel-warning.png)
+
+- **Cash warning before a duel** – when you queue a duel against a player while carrying cash, a standard game dialog with a red exclamation mark shows how much you are carrying. Choose **Duel anyway** or **Cancel duel**. NPC bandit duels start instantly in the game and are not affected.
+- **Do not warn me again this session** – tick the box to silence the warning until you close the game tab.
+- **Cash limit** – in the settings you can enter an amount. No warning is shown while your cash is at or below it; above it, the warning appears. 0 warns for any cash.
+
+![Duel settings](screenshots/duel-settings.png)
 
 ### Top bar
 - **XP needed field** – shows the XP missing for the next level next to the coin. Click it for the XP gained today, a history of recent days, and an XP target (every day / until a date) with the daily XP you still need.
